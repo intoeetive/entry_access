@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+
+  <title>Entry access</title>
+
+  <style type="text/css" media="screen,print">@import url("docs.css");</style>
+<META http-equiv=Content-Type content="text/html; charset=utf-8"></head>
+
+<body>
+<div><a name="top"></a></div>
+
+<div id="header">
+<table cellpadding="0" cellspacing="0" border="0" style="width:100%;"><tr>
+<td class="docheading" style="width:300px;"><h1 style="font-size: 18px; font-weight: bold;">intoEEtive.com</h1></td>
+<td class="searchbox">
+
+</td>
+</tr>
+</table>
+</div>
+
+
+<div id="navlinks">
+<a href="http://www.intoeetive.com/">intoEEtive.com</a> &gt;
+<a href="http://www.intoeetive.com/index.php/category/extending_ee">EE add-ons</a> &gt;
+<a href="http://www.intoeetive.com/index.php/comments/restrict-entry-access">Restrict entry access</a>
+</div>
+
+
+<div id="content">
+
+	<h1>Entry access</h1>
+
+	<p>This add-on enables you to restrict access to certain channel entries for certain members.</p>
+ 
+	<h2><a name="installation"></a>Usage</h2>
+
+<p>If you want to restrict access to your entry, go to 'Entry access' tab that is shown to you when entry is created or edited. There, select all member groups and/or individual members whom you want to grant permissions to view the entry. Author and superadmins will always get access. If you don't select anything, no restriction will apply.
+</p>
+<p>If you have more than 100 members on your site, the select control will use AJAX to fetch members. Enter at least 3 characters from the screen name into input above the members list and all matches will be shown.</p>
+
+<p>You can specify default members and member groups that will be assigned to access an entry when it is created in extension settings.</p>
+
+<p>The restrictions also work on backend, restricting editing the entry only to assigned members/groups (if set). No action required from you to get his work.</p>
+
+
+<p>You can use <strong>{exp:entry_access:members}</strong> tag to display all members who have access to certain entry.</p>
+
+<p><strong>Tag parameters:</strong>
+<ul>
+<li><dfn>entry_id</dfn> &mdash; ID of entry. Required</li>
+<li><dfn>custom_fields="yes"</dfn> &mdash; if set to "yes", will also parse custom profile data for members</li>
+</ul>
+</p>
+
+<p><strong>Single variables:</strong>
+<ul>
+<li><dfn>member_id</dfn></li>
+<li><dfn>username</dfn></li>
+<li><dfn>screen_name</dfn></li>
+<li><dfn>email</dfn></li>
+<li>and other standard member profile fields</li>
+<li>Additionally, if you have custom_fields="yes" set then all custom profile fields are parsed.</li>
+</ul>
+</p>
+
+
+
+
+<!--
+
+<p class="important">The following applies to Entry Access versions below 2.0. In version 2.0 and higher, the usage of tag pairs is not necessary.</p>-->
+
+<p>To make the permissions work, you'll need to use two new tag pairs within {exp:channel:entries} call.</p>
+<p>Wrap the actual content to be displayed into <strong>{grant_access}</strong> tag pair.</p>
+<p>Wrap the text to be displayed if user does not have permissions to <strong>{deny_access}</strong> tag pair.</p>
+
+	<h2><a name="fieldtype"></a>Example</h2>
+
+<code>
+{exp:channel:entries}<br />
+<br />
+&lt;p&gt;This is text displayed to everyone&lt;/p&gt;<br />
+<br />
+{grant_access}	<br />
+&lt;h1&gt;{title}&lt;/h1&gt;<br />
+{body}<br />
+{/grant_access}<br />
+<br />
+{deny_access}	<br />
+&lt;p&gt;&lt;strong&gt;You don't have access to {title}&lt;/strong&gt;&lt;/p&gt;<br />
+{/deny_access}<br />
+<br />
+{/exp:channel::entries}
+</code>
+
+</div>
+
+
+<p class="center"><a href="#top">Top of page</a></p>
+
+<!-- {user_guide_comments} -->
+
+<div id="footer">
+  <address>Copyright &copy; 2011 Yuri Salimovskiy <a href="http://www.intoeetive.com/">intoEEtive.com</a></address>
+</div>
+
+</body>
+</html>
