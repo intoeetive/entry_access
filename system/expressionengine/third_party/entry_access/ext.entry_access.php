@@ -7,6 +7,7 @@
  http://www.intoeetive.com/
 -----------------------------------------------------
  Copyright (c) 2011-2012 Yuri Salimovskiy
+ Some code by Ilija Divic wmd@wmd.hr
 =====================================================
  This software is intended for usage with
  ExpressionEngine CMS, version 2.0 or higher
@@ -59,6 +60,21 @@ class Entry_access_ext {
     			'hook'		=> 'channel_entries_tagdata',
     			'method'	=> 'modify_tagdata',
     			'priority'	=> 110
+    		),
+            array(
+    			'hook'		=> 'edit_entries_additional_where',
+    			'method'	=> 'edit_entries_additional_where',
+    			'priority'	=> 10
+    		),
+			array(
+    			'hook'		=> 'entry_submission_absolute_end',
+    			'method'	=> 'entry_submission_absolute_end',
+    			'priority'	=> 10
+    		),
+			array(
+    			'hook'		=> 'delete_entries_start',
+    			'method'	=> 'delete_entries_start',
+    			'priority'	=> 10
     		),
             /*array(
                 'hook'		=> 'channel_entries_query_result',
@@ -138,6 +154,43 @@ class Entry_access_ext {
 			        'hook'      => "zenbu_custom_order_sort",
 			        'priority'    => 110
 			    )
+	            
+	    	);
+	    	
+	        foreach ($hooks AS $hook)
+	    	{
+	    		$data = array(
+	        		'class'		=> __CLASS__,
+	        		'method'	=> $hook['method'],
+	        		'hook'		=> $hook['hook'],
+	        		'settings'	=> '',
+	        		'priority'	=> $hook['priority'],
+	        		'version'	=> $this->version,
+	        		'enabled'	=> 'y'
+	        	);
+	            $this->EE->db->insert('extensions', $data);
+	    	}	
+    	}
+        
+        if ($current < '1.6')
+    	{
+    		//new hooks
+			$hooks = array(
+	            array(
+        			'hook'		=> 'edit_entries_additional_where',
+        			'method'	=> 'edit_entries_additional_where',
+        			'priority'	=> 10
+        		),
+    			array(
+        			'hook'		=> 'entry_submission_absolute_end',
+        			'method'	=> 'entry_submission_absolute_end',
+        			'priority'	=> 10
+        		),
+    			array(
+        			'hook'		=> 'delete_entries_start',
+        			'method'	=> 'delete_entries_start',
+        			'priority'	=> 10
+        		)
 	            
 	    	);
 	    	
@@ -624,6 +677,157 @@ class Entry_access_ext {
 	{
 		// Cells are pretty much the same, so nothing important to sort.
 	}
+    
+    
+    public function edit_entries_additional_where ()
+	{
+		$where = ($this->EE->extensions->last_call) ? $this->EE->extensions->last_call : array();
+
+		$group_id = $this->EE->session->userdata['group_id'];
+		$member_id = $this->EE->session->userdata['member_id'];
+		$not_allowed_ids = array();
+
+		if ($group_id == 1)
+		{
+			return $where;
+		}
+		
+		$this->EE->db->select('entry_access,author_id,entry_id');
+		$this->EE->db->from('channel_titles');
+		if(isset($_GET['channel_id']) && $_GET['channel_id'] !="")
+		$this->EE->db->where('channel_id', $_GET['channel_id']);
+		$results = $this->EE->db->get();
+		
+		if ($results->num_rows() > 0)
+		{
+			foreach($results->result_array() as $row)
+			{
+				$entry_access = unserialize($row['entry_access']);
+				$group_access = $entry_access['group_access'];
+				$member_access = $entry_access['member_access'];
+				if($member_id != $row['author_id'])
+				if (!empty($group_access) && !in_array($group_id, $group_access))
+				{
+					$not_allowed_ids[] = $row['entry_id'];
+				}
+				elseif (!empty($member_access) && !in_array($member_id, $member_access))
+				{
+					$not_allowed_ids[] = $row['entry_id'];
+				}
+			}
+		}
+
+		if ( ! empty($not_allowed_ids))
+		{
+			$not_entry_id = 'entry_id !=';
+
+			if ( ! isset($where[$not_entry_id]))
+			{
+				$where[$not_entry_id] = array();
+			}
+			else
+			{
+				if ( ! is_array($where[$not_entry_id]))
+				{
+					$where[$not_entry_id] = array($where[$not_entry_id]);
+				}
+			}
+
+			$where[$not_entry_id] = array_merge(
+				$where[$not_entry_id], 
+				$not_allowed_ids
+			);	
+		}
+		return $where;
+	}
+	//END edit_entries_additional_where
+	
+	public function entry_submission_absolute_end($entry_id, $meta, $data, $view_url)
+	{ 
+		$return = ($this->EE->extensions->last_call) ? $this->EE->extensions->last_call : array();
+
+		$group_id = $this->EE->session->userdata['group_id'];
+		$member_id = $this->EE->session->userdata['member_id'];
+		$not_allowed_ids = array();
+
+		if ($group_id == 1)
+		{
+			return $return;
+		}
+		
+		$this->EE->db->select('entry_access,author_id');
+		$this->EE->db->from('channel_titles');
+		$this->EE->db->where('entry_id', $entry_id);
+		$result = $this->EE->db->get();
+
+		$entry_access = unserialize($result->row('entry_access'));
+		$group_access = $entry_access['group_access'];
+		$member_access = $entry_access['member_access'];
+		if($member_id != $result->row('author_id'))
+		if (!empty($group_access) && !in_array($group_id, $group_access))
+		{
+			$this->EE->extensions->end_script = TRUE;
+			return $this->EE->output->show_user_error(
+					'general', array($this->EE->lang->line('You have no permission to edit this entry.'))
+				);
+		}
+		elseif (!empty($member_access) && !in_array($member_id, $member_access))
+		{
+			$this->EE->extensions->end_script = TRUE;
+			return $this->EE->output->show_user_error(
+					'general', array($this->EE->lang->line('You have no permission to edit this entry.'))
+				);
+		}
+
+		return $return;
+	}
+	
+	public function delete_entries_start ()
+	{
+		$return = ($this->EE->extensions->last_call) ? $this->EE->extensions->last_call : array();
+
+		$group_id = $this->EE->session->userdata['group_id'];
+		$member_id = $this->EE->session->userdata['member_id'];
+		$not_allowed_ids = array();
+
+		if ($group_id == 1)
+		{
+			return $return;
+		}
+
+		$count = count($_POST['delete']);
+
+		foreach ($_POST['delete'] as $key => $delete_id)
+		{		
+			$this->EE->db->select('entry_access,author_id');
+			$this->EE->db->from('channel_titles');
+			$this->EE->db->where('entry_id', $delete_id);
+			$result = $this->EE->db->get();
+
+			$entry_access = unserialize($result->row('entry_access'));
+			$group_access = $entry_access['group_access'];
+			$member_access = $entry_access['member_access'];
+			if($member_id != $result->row('author_id'))
+			if (!empty($group_access) && !in_array($group_id, $group_access))
+			{
+				unset($_POST['delete'][$key]);
+			}
+			elseif (!empty($member_access) && !in_array($member_id, $member_access))
+			{
+				unset($_POST['delete'][$key]);
+			}	
+		}
+		if($count > 0 and count($_POST['delete']) == 0)
+		{
+			$this->EE->extensions->end_script = TRUE;
+			return $this->EE->output->show_user_error(
+				'general', array($this->EE->lang->line('You have no permission to delete this entry.'))
+			);
+		}
+
+		return $return;
+	}
+	//END delete_entries_start
     
 
 }
