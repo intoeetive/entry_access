@@ -3,7 +3,7 @@
 if ( ! defined('ENTRY_ACCESS_ADDON_NAME'))
 {
 	define('ENTRY_ACCESS_ADDON_NAME',         'Entry Access');
-	define('ENTRY_ACCESS_ADDON_VERSION',      '1.6.0');
+	define('ENTRY_ACCESS_ADDON_VERSION',      '1.6.1');
 }
 
 $config['name'] = ENTRY_ACCESS_ADDON_NAME;

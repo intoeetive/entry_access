@@ -191,35 +191,31 @@ class Entry_access_tab {
         }
         
         
-        $theme_folder_url = trim($this->EE->config->item('theme_folder_url'), '/').'/third_party/entry_access/';
+        $theme_folder_url = URL_THIRD_THEMES.'entry_access/';
         $this->EE->cp->add_to_foot('<link type="text/css" href="'.$theme_folder_url.'ui.multiselect.css" rel="stylesheet" />');
         //$this->EE->cp->add_js_script(array('plugin' => 'sortable'));
         $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_folder_url.'plugins/localisation/jquery.localisation-min.js"></script>');
         $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_folder_url.'plugins/blockUI/jquery.blockUI.js"></script>');
         $this->EE->cp->add_to_foot('<script type="text/javascript" src="'.$theme_folder_url.'ui.multiselect.js"></script>');
    
-        $field_name_prefix = '';
-        $ee_version = '2.'.str_replace('.', '', substr(APP_VER, 2));
-		if ($ee_version >= 2.40)
-		{
-			$field_name_prefix = 'field_id_';
-		}
+        
+        
         
 		$js = "
-            $('#".$field_name_prefix."entry_access__group_access').multiselect({ droppable: 'none', sortable: 'none' });
+            $('".$this->_field_indenifier('entry_access__group_access')."').multiselect({ droppable: 'none', sortable: 'none' });
         ";
         if ($total_members > $this->limit)
         {
             $act = $this->EE->db->query("SELECT action_id FROM exp_actions WHERE class='Entry_access' AND method='find_members'");
             $remoteUrl = trim($this->EE->config->item('site_url'), '/').'/?ACT='.$act->row('action_id');
             $js .= "
-            $('#".$field_name_prefix."entry_access__member_access').multiselect({ droppable: 'none', sortable: 'none', remoteUrl: '$remoteUrl' });
+            $('".$this->_field_indenifier('entry_access__member_access')."').multiselect({ droppable: 'none', sortable: 'none', remoteUrl: '$remoteUrl' });
             ";
         }
         else
         {
             $js .= "
-            $('#".$field_name_prefix."entry_access__member_access').multiselect({ droppable: 'none', sortable: 'none' });
+            $('".$this->_field_indenifier('entry_access__member_access')."').multiselect({ droppable: 'none', sortable: 'none' });
             ";
         }
         
@@ -269,7 +265,7 @@ class Entry_access_tab {
 	        }
 	        
 	        $js .= "
-            $('#".$field_name_prefix."entry_access__category_access').multiselect({ droppable: 'none', sortable: 'none' });
+            $('".$this->_field_indenifier('entry_access__category_access')."').multiselect({ droppable: 'none', sortable: 'none' });
             ";
             
             $settings[] = array(
@@ -294,6 +290,27 @@ class Entry_access_tab {
 
 		return $settings;
 	}
+    
+    
+    function _field_indenifier($field_name)
+    {
+        $field_name_prefix = '';
+		if ($this->EE->config->item('app_version')>=240)
+		{
+			$field_name_prefix = 'field_id_';
+		}
+        
+        if ($this->EE->config->item('app_version')<=280)
+		{
+			$field_indenifier = "#".$field_name_prefix.$field_name;
+		}
+        else
+        {
+            $field_indenifier = "#sub_hold_field_".$field_name." select";
+        }
+        return $field_indenifier;
+    }
+    
 
 	function validate_publish($params)
 	{
