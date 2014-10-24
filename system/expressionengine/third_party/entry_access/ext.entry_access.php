@@ -702,18 +702,27 @@ class Entry_access_ext {
 		{
 			foreach($results->result_array() as $row)
 			{
-				$entry_access = unserialize($row['entry_access']);
+				$access = $this->_check_access($row);
+                if ($access!==true)
+                {
+                    $not_allowed_ids[] = $row['entry_id'];
+                }
+                /*
+                $entry_access = unserialize($row['entry_access']);
 				$group_access = $entry_access['group_access'];
 				$member_access = $entry_access['member_access'];
 				if($member_id != $row['author_id'])
-				if (!empty($group_access) && !in_array($group_id, $group_access))
-				{
-					$not_allowed_ids[] = $row['entry_id'];
-				}
-				elseif (!empty($member_access) && !in_array($member_id, $member_access))
-				{
-					$not_allowed_ids[] = $row['entry_id'];
-				}
+                {
+    				if (!empty($group_access) && !in_array($group_id, $group_access))
+    				{
+    					$not_allowed_ids[] = $row['entry_id'];
+    				}
+    				elseif (!empty($member_access) && !in_array($member_id, $member_access))
+    				{
+    					$not_allowed_ids[] = $row['entry_id'];
+    				}
+                }
+                */
 			}
 		}
 
@@ -759,7 +768,16 @@ class Entry_access_ext {
 		$this->EE->db->from('channel_titles');
 		$this->EE->db->where('entry_id', $entry_id);
 		$result = $this->EE->db->get();
-
+        
+        $access = $this->_check_access($result->row_array());
+        if ($access!==true)
+        {
+            $this->EE->extensions->end_script = TRUE;
+			return $this->EE->output->show_user_error(
+					'general', array($this->EE->lang->line('You have no permission to edit this entry.'))
+				);
+        }
+/*
 		$entry_access = unserialize($result->row('entry_access'));
 		$group_access = $entry_access['group_access'];
 		$member_access = $entry_access['member_access'];
@@ -778,7 +796,7 @@ class Entry_access_ext {
 					'general', array($this->EE->lang->line('You have no permission to edit this entry.'))
 				);
 		}
-
+*/
 		return $return;
 	}
 	
@@ -803,7 +821,13 @@ class Entry_access_ext {
 			$this->EE->db->from('channel_titles');
 			$this->EE->db->where('entry_id', $delete_id);
 			$result = $this->EE->db->get();
-
+            
+            $access = $this->_check_access($result->row_array());
+            if ($access!==true)
+            {
+                unset($_POST['delete'][$key]);
+            }
+/*
 			$entry_access = unserialize($result->row('entry_access'));
 			$group_access = $entry_access['group_access'];
 			$member_access = $entry_access['member_access'];
@@ -816,6 +840,7 @@ class Entry_access_ext {
 			{
 				unset($_POST['delete'][$key]);
 			}	
+            */
 		}
 		if($count > 0 and count($_POST['delete']) == 0)
 		{
