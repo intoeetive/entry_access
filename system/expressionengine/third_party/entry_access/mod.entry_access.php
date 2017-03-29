@@ -49,6 +49,7 @@ class Entry_access {
         $this->EE->db->select('member_id, screen_name');
         $this->EE->db->from('members');
         $this->EE->db->where('screen_name LIKE "%'.$str.'%"');
+        $this->EE->db->or_where('email LIKE "%'.$str.'%"');
         $q = $this->EE->db->get();
         $out = '';
         foreach ($q->result_array() as $row)

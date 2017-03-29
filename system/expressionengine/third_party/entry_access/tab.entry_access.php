@@ -132,6 +132,10 @@ class Entry_access_tab {
         }
         else
         {
+            $group_access = (isset($this->settings['group_access'])) ? $this->settings['group_access'] : array();
+            $member_access = (isset($this->settings['member_access'])) ? $this->settings['member_access'] : array();
+            $category_access = (isset($this->settings['category_access'])) ? $this->settings['category_access'] : array();
+            
             if(isset($this->settings['assign_access_to_author_group']) && $this->settings['assign_access_to_author_group']==true)
             {
                 if ($this->EE->session->userdata('group_id') != 1)
@@ -140,9 +144,7 @@ class Entry_access_tab {
                 }
                 $this->settings['group_access'] = array_unique($this->settings['group_access']);
             }
-			$group_access = (isset($this->settings['group_access'])) ? $this->settings['group_access'] : array();
-            $member_access = (isset($this->settings['member_access'])) ? $this->settings['member_access'] : array();
-            $category_access = (isset($this->settings['category_access'])) ? $this->settings['category_access'] : array();
+			
         }
         
         $group_field_list_items = array();
@@ -295,12 +297,12 @@ class Entry_access_tab {
     function _field_indenifier($field_name)
     {
         $field_name_prefix = '';
-		if ($this->EE->config->item('app_version')>=240)
+		if (version_compare(APP_VER, '2.4.0', '>='))
 		{
 			$field_name_prefix = 'field_id_';
 		}
         
-        if ($this->EE->config->item('app_version')<=280)
+        if (version_compare(APP_VER, '2.8.0', '<='))
 		{
 			$field_indenifier = "#".$field_name_prefix.$field_name;
 		}
